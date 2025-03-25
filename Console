@@ -197,7 +197,7 @@ async function showSplashScreen() {
     // Set the splash screen content with custom styles
     splashScreen.innerHTML = `
         <span style="color: blue;">KHAN</span>
-        <span style="color: red;"> FUCCKER</span>
+        <span style="color: red;"> HACK</span>
     `;
 
     document.body.appendChild(splashScreen);
