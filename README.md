@@ -16,3 +16,5 @@ and hit enter
 than you will be able to paste your text
 than hit enter, once or twice
 then you're good to go!
+Also to show the mod menu now you only have to press p
+I add a panic button so every time you press p it will hide the mod menu
