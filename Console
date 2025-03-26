@@ -10,7 +10,10 @@ const featureConfigs = {
 window.features = {
     autoAnswer: true,
     questionSpoof: true,
-    darkModeEnabled: false // Dark mode status
+    darkModeEnabled: false, // Dark mode status
+    minuteFarmerEnabled: false, // New feature status
+    rgbLogoEnabled: false, // New feature status
+    onekoJsEnabled: false, // New feature status
 };
 
 // Function to create a delay
@@ -102,7 +105,7 @@ function spoofQuestion() {
 
         const originalResponse = await originalFetch.apply(this, arguments);
         const clonedResponse = originalResponse.clone();
-
+        
         try {
             const responseBody = await clonedResponse.text();
             let responseObj = JSON.parse(responseBody);
@@ -201,7 +204,7 @@ async function showSplashScreen() {
     `;
 
     document.body.appendChild(splashScreen);
-    
+   
     // Fade-in effect
     setTimeout(() => {
         splashScreen.style.opacity = '1';
@@ -216,17 +219,23 @@ async function showSplashScreen() {
     splashScreen.remove();
 }
 
+// Create a global variable for the mod menu
+let modMenu;
+
 // Function to create a mod menu
 function createModMenu() {
     const menuContainer = document.createElement('div');
     menuContainer.style.position = 'fixed';
-    menuContainer.style.top = '10px';
-    menuContainer.style.right = '10px';
+    menuContainer.style.top = '10px';   // Positioning at the top
+    menuContainer.style.right = '10px'; // Positioning at the right
     menuContainer.style.zIndex = '9999';
     menuContainer.style.padding = '10px';
     menuContainer.style.backgroundColor = '#444';
     menuContainer.style.borderRadius = '5px';
     menuContainer.style.color = '#fff';
+    menuContainer.style.display = 'none'; // Start hidden
+    menuContainer.style.flexDirection = 'column'; // Set flex direction to column for vertical layout
+    menuContainer.style.gap = '5px'; // Space between buttons
 
     const title = document.createElement('h4');
     title.innerText = 'Mod Menu';
@@ -234,57 +243,25 @@ function createModMenu() {
     menuContainer.appendChild(title);
 
     // Auto Answer toggle
-    const autoAnswerButton = document.createElement('button');
-    autoAnswerButton.innerText = `Auto Answer: ${window.features.autoAnswer ? 'ON' : 'OFF'}`;
-    autoAnswerButton.style.marginBottom = '5px';
-    autoAnswerButton.style.backgroundColor = '#007BFF';
-    autoAnswerButton.style.color = '#fff';
-    autoAnswerButton.style.border = 'none';
-    autoAnswerButton.style.borderRadius = '5px';
-    autoAnswerButton.style.cursor = 'pointer';
-    autoAnswerButton.style.padding = '5px';
-
-    autoAnswerButton.addEventListener('click', () => {
-        window.features.autoAnswer = !window.features.autoAnswer;
-        autoAnswerButton.innerText = `Auto Answer: ${window.features.autoAnswer ? 'ON' : 'OFF'}`;
-        sendToast(`Auto Answer is now ${window.features.autoAnswer ? 'enabled' : 'disabled'}.`, 3000);
+    const autoAnswerButton = createToggleButton('Auto Answer', window.features.autoAnswer, (isEnabled) => {
+        window.features.autoAnswer = isEnabled;
+        sendToast(`Auto Answer is now ${isEnabled ? 'enabled' : 'disabled'}.`, 3000);
     });
+    
     menuContainer.appendChild(autoAnswerButton);
 
     // Question Spoof toggle
-    const questionSpoofButton = document.createElement('button');
-    questionSpoofButton.innerText = `Question Spoof: ${window.features.questionSpoof ? 'ON' : 'OFF'}`;
-    questionSpoofButton.style.marginBottom = '5px';
-    questionSpoofButton.style.backgroundColor = '#28A745';
-    questionSpoofButton.style.color = '#fff';
-    questionSpoofButton.style.border = 'none';
-    questionSpoofButton.style.borderRadius = '5px';
-    questionSpoofButton.style.cursor = 'pointer';
-    questionSpoofButton.style.padding = '5px';
-
-    questionSpoofButton.addEventListener('click', () => {
-        window.features.questionSpoof = !window.features.questionSpoof;
-        questionSpoofButton.innerText = `Question Spoof: ${window.features.questionSpoof ? 'ON' : 'OFF'}`;
-        sendToast(`Question Spoofing is now ${window.features.questionSpoof ? 'enabled' : 'disabled'}.`, 3000);
+    const questionSpoofButton = createToggleButton('Question Spoof', window.features.questionSpoof, (isEnabled) => {
+        window.features.questionSpoof = isEnabled;
+        sendToast(`Question Spoofing is now ${isEnabled ? 'enabled' : 'disabled'}.`, 3000);
     });
+
     menuContainer.appendChild(questionSpoofButton);
 
     // Dark Mode toggle
-    const darkModeButton = document.createElement('button');
-    darkModeButton.innerText = `Dark Mode: ${window.features.darkModeEnabled ? 'ON' : 'OFF'}`;
-    darkModeButton.style.marginBottom = '5px';
-    darkModeButton.style.backgroundColor = '#6F42C1';
-    darkModeButton.style.color = '#fff';
-    darkModeButton.style.border = 'none';
-    darkModeButton.style.borderRadius = '5px';
-    darkModeButton.style.cursor = 'pointer';
-    darkModeButton.style.padding = '5px';
-
-    darkModeButton.addEventListener('click', () => {
-        window.features.darkModeEnabled = !window.features.darkModeEnabled;
-        darkModeButton.innerText = `Dark Mode: ${window.features.darkModeEnabled ? 'ON' : 'OFF'}`;
-
-        if (window.features.darkModeEnabled) {
+    const darkModeButton = createToggleButton('Dark Mode', window.features.darkModeEnabled, (isEnabled) => {
+        window.features.darkModeEnabled = isEnabled;
+        if (isEnabled) {
             enableDarkMode();
             sendToast("🌑 Dark Mode Activated", 2000);
         } else {
@@ -292,10 +269,76 @@ function createModMenu() {
             sendToast("🌕 Dark Mode Deactivated", 2000);
         }
     });
+
     menuContainer.appendChild(darkModeButton);
+
+    // Minute Farmer toggle
+    const minuteFarmerButton = createToggleButton('Minute Farmer', window.features.minuteFarmerEnabled, (isEnabled) => {
+        window.features.minuteFarmerEnabled = isEnabled;
+        if (isEnabled) {
+            startMinuteFarmer();
+            sendToast("🚜 Minute Farmer Activated", 2000);
+        } else {
+            stopMinuteFarmer();
+            sendToast("🚜 Minute Farmer Deactivated", 2000);
+        }
+    });
+
+    menuContainer.appendChild(minuteFarmerButton);
+
+    // RGB Logo toggle
+    const rgbLogoButton = createToggleButton('RGB Logo', window.features.rgbLogoEnabled, (isEnabled) => {
+        window.features.rgbLogoEnabled = isEnabled;
+        if (isEnabled) {
+            startRGBLogo();
+            sendToast("🌈 RGB Logo Activated", 2000);
+        } else {
+            stopRGBLogo();
+            sendToast("🌈 RGB Logo Deactivated", 2000);
+        }
+    });
+
+    menuContainer.appendChild(rgbLogoButton);
+
+    // OnekoJS toggle
+    const onekoJsButton = createToggleButton('OnekoJS', window.features.onekoJsEnabled, (isEnabled) => {
+        window.features.onekoJsEnabled = isEnabled;
+        if (isEnabled) {
+            startOnekoJs();
+        } else {
+            stopOnekoJs();
+        }
+    });
+
+    menuContainer.appendChild(onekoJsButton);
 
     // Add the menu to the body
     document.body.appendChild(menuContainer);
+
+    // Return the menu for toggling visibility
+    return menuContainer;
+}
+
+// Helper function to create a toggle button
+function createToggleButton(label, initialValue, onToggle) {
+    const button = document.createElement('button');
+    button.innerText = `${label}: ${initialValue ? 'ON' : 'OFF'}`;
+    button.style.backgroundColor = initialValue ? '#28A745' : '#DC3545'; // Green for ON, Red for OFF
+    button.style.color = '#fff';
+    button.style.border = 'none';
+    button.style.borderRadius = '5px';
+    button.style.cursor = 'pointer';
+    button.style.padding = '5px';
+
+    button.addEventListener('click', () => {
+        const newValue = !initialValue;
+        onToggle(newValue);
+        button.innerText = `${label}: ${newValue ? 'ON' : 'OFF'}`;
+        button.style.backgroundColor = newValue ? '#28A745' : '#DC3545'; // Update color based on state
+        initialValue = newValue; // Update current value
+    });
+
+    return button;
 }
 
 // Enable dark mode
@@ -313,6 +356,120 @@ function disableDarkMode() {
     }
 }
 
+// Minute Farmer implementation
+function startMinuteFarmer() {
+    console.log('Minute Farmer started.');
+    if (!window.minuteFarmerInterval) {
+        window.minuteFarmerInterval = setInterval(() => {
+            console.log('Minute Farmer working...'); // Simulate a task
+        }, 60000); // Every minute
+    }
+}
+
+function stopMinuteFarmer() {
+    console.log('Minute Farmer stopped.');
+    clearInterval(window.minuteFarmerInterval); // Clear the interval
+    window.minuteFarmerInterval = null;
+}
+
+// RGB Logo implementation
+let rgbLogoInterval; // Variable to hold rgb logo color changing interval
+
+function startRGBLogo() {
+    const logo = document.querySelector('.Khan-logo'); // Adjust this selector based on actual logo class or ID
+    if (logo) {
+        console.log('RGB Logo started.');
+        logo.style.transition = "color 0.5s"; // Smoothly change color
+        const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
+        let index = 0;
+
+        rgbLogoInterval = setInterval(() => {
+            logo.style.color = colors[index % colors.length];
+            index++;
+        }, 500); // Change color every half second
+    } else {
+        console.warn('Logo element not found for RGB effect.');
+    }
+}
+
+function stopRGBLogo() {
+    console.log('RGB Logo stopped.');
+    clearInterval(rgbLogoInterval); // Clear the interval
+    const logo = document.querySelector('.Khan-logo'); // Use the same selector
+    if (logo) {
+        logo.style.color = ''; // Reset color
+    }
+}
+
+// Cat cursor functionality
+let catCursor;
+
+function createCatCursor() {
+    catCursor = document.createElement('div');
+    catCursor.style.position = 'fixed';
+    catCursor.style.width = '50px';
+    catCursor.style.height = '50px';
+    catCursor.style.pointerEvents = 'none';
+    catCursor.style.zIndex = '9999';
+    catCursor.style.backgroundImage = 'url("https://your-cat-image-url.com/cat.png")'; // Replace with your cat image URL
+    catCursor.style.backgroundSize = 'cover';
+    document.body.appendChild(catCursor);
+}
+
+function updateCatCursor(e) {
+    if (window.features.onekoJsEnabled) {
+        catCursor.style.left = `${e.pageX}px`;
+        catCursor.style.top = `${e.pageY}px`;
+    }
+}
+
+function startCatCursor() {
+    createCatCursor();
+    window.addEventListener('mousemove', updateCatCursor);
+}
+
+function stopCatCursor() {
+    if (catCursor) {
+        catCursor.remove();
+    }
+    window.removeEventListener('mousemove', updateCatCursor);
+}
+
+// Adding the OnekoJS functionality
+function startOnekoJs() {
+    console.log('OnekoJS started.');
+    
+    // URL to the OnekoJS library
+    const onekoJsUrl = 'https://cdn.jsdelivr.net/gh/otherwise/oneko.js/oneko.js';
+
+    loadScript(onekoJsUrl).then(() => {
+        const oneko = new Oneko();
+        oneko.start(); // Start OnekoJS
+        
+        // Create and start the cat cursor
+        startCatCursor();
+        
+        sendToast("🐾 OnekoJS Activated", 2000);
+    }).catch(err => {
+        console.error('Failed to load OnekoJS:', err);
+        sendToast("Failed to load OnekoJS.", 3000);
+    });
+}
+
+// Function to stop OnekoJS
+function stopOnekoJs() {
+    console.log('OnekoJS stopped.');
+    
+    if (typeof Oneko !== 'undefined') {
+        const oneko = new Oneko();
+        oneko.stop(); // Stop OnekoJS
+    } else {
+        console.warn('OnekoJS is not defined or already stopped.');
+    }
+
+    stopCatCursor(); // Stop tracking the cat cursor
+}
+
 // Check that the script is running on the correct website
 if (!/^https?:\/\/en\.khanacademy\.org/.test(window.location.href)) {
     alert("Bruh Khan Hack Couldn't inject\nYou need to run Khan Hack from the Khan Academy website! (https://en.khanacademy.org/)");
@@ -322,15 +479,14 @@ if (!/^https?:\/\/en\.khanacademy\.org/.test(window.location.href)) {
 // Load the Dark Reader and activate dark mode
 loadScript('https://cdn.jsdelivr.net/npm/darkreader@4.9.92/darkreader.min.js').then(async () => {
     DarkReader.setFetchMethod(window.fetch);
-    
-    // Display the warning "Warning"
+   
     sendToast("THE HACK WAS SUCCESSFUL!", 5000, 'top', null, '20px', 'Arial, sans-serif', '#00ff00');
 
     // Wait 1 second before displaying the Dark Mode toast
     await delay(1000);
 
     // Display the Dark Mode toast with the image
-    sendToast("🌑 Dark Mode Activated", 2000, 'bottom', 'https://cdn.discordapp.com/attachments/1326756804889280553/1351333793306247220/6c0df6a95ea7f835588f586a11bdbd4e.png?ex=67d9ff2a&is=67d8adaa&hm=1992d77fc05bd65a4417da3e860cead36b2d62395a28f1b6598d43a0ab953cc0&');
+    sendToast("🌑 Dark Mode Activated", 2000, 'bottom', 'https://cdn.discordapp.com/attachments/1326756804889280553/1351333793306247220/6c0df6a95ea7f835588f586a11bdbd4d.png?ex=67d9ff2a&is=67d8adaa&hm=1992d77fc05bd65a4417da3e860cead36b2d62395a28f1b6598d43a0ab953cc0&');
 });
 
 // Load Toastify CSS and then start features
@@ -343,7 +499,18 @@ loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css').then(as
         console.clear();
 
         // Create the mod menu
-        createModMenu();
+        modMenu = createModMenu(); // Save the menu in a global variable for later
+
+        // Set up the panic button to toggle the mod menu visibility
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'p' || event.key === 'P') { // Listen for the 'P' key
+                if (modMenu.style.display === 'none' || !modMenu.style.display || modMenu.style.display === '') {
+                    modMenu.style.display = 'flex'; // Show menu in vertical layout
+                } else {
+                    modMenu.style.display = 'none'; // Hide menu
+                }
+            }
+        });
 
         // Display the startup screen
         await showSplashScreen();
